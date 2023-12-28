@@ -25,13 +25,13 @@ class RbmGibbsTrainerConfig:
         self.finMm = 0.9		# final momentum
         self.mmSwitchIter = 5	# at which iteration we switch the momentum
         self.maxIter = 9		# how many iterations
-        
+
         self.visibleDistribution = 'bernoulli'
 
 
 class RbmGibbsTrainer(Trainer):
     """Class for training rbms with contrastive divergence."""
-    
+
     def __init__(self, rbm, dataset, cfg=None):
         self.rbm = rbm
         self.invRbm = rbm.invert()
@@ -56,59 +56,59 @@ class RbmGibbsTrainer(Trainer):
                 zeros((self.rbm.visibleDim, self.rbm.hiddenDim)), \
                 zeros(self.rbm.hiddenDim), zeros(self.rbm.visibleDim)
 
-            for t in xrange(cfg.maxIter):
-                #print "*** Iteration %2d **************************************" % t
+            for t in range(cfg.maxIter):
+                #print("*** Iteration %2d **************************************" % t)
 
-                weights = self.rbm.weights
-                weights = weights.reshape((self.rbm.visibleDim, self.rbm.hiddenDim))
-                biasWeights = self.rbm.biasWeights
+                params = self.rbm.params
+                params = params.reshape((self.rbm.visibleDim, self.rbm.hiddenDim))
+                biasParams = self.rbm.biasParams
 
                 mm = cfg.iniMm if t < cfg.mmSwitchIter else cfg.finMm
 
                 w, hb, vb = self.calcUpdateByRows(rows)
 
-                #print "Delta: "
-                #print "Weight: ",
-                #print w
-                #print "Visible bias: ",
-                #print vb
-                #print "Hidden bias: ",
-                #print hb
-                #print ""
+                #print("Delta: ")
+                #print("Weight: ",)
+                #print(w)
+                #print("Visible bias: ",)
+                #print(vb)
+                #print("Hidden bias: ",)
+                #print(hb)
+                #print("")
 
                 olduw = uw = olduw * mm + \
-                	cfg.rWeights * (w - cfg.weightCost * weights)
+                	cfg.rWeights * (w - cfg.weightCost * params)
                 olduhb = uhb = olduhb * mm + cfg.rHidBias * hb
                 olduvb = uvb = olduvb * mm + cfg.rVisBias * vb
 
-                #print "Delta after momentum: "
-                #print "Weight: ",
-                #print uw
-                #print "Visible bias: ",
-                #print uvb
-                #print "Hidden bias: ",
-                #print uhb
-                #print ""
+                #print("Delta after momentum: ")
+                #print("Weight: ",)
+                #print(uw)
+                #print("Visible bias: ",)
+                #print(uvb)
+                #print("Hidden bias: ",)
+                #print(uhb)
+                #print("")
 
                 # update the parameters of the original rbm
-                weights += uw
-                biasWeights += uhb
+                params += uw
+                biasParams += uhb
 
                 # Create a new inverted rbm with correct parameters
-                invBiasWeights = self.invRbm.biasWeights
-                invBiasWeights += uvb
+                invBiasParams = self.invRbm.biasParams
+                invBiasParams += uvb
                 self.invRbm = self.rbm.invert()
-                self.invRbm.biasWeights[:] = invBiasWeights
+                self.invRbm.biasParams[:] = invBiasParams
 
-                #print "Updated "
-                #print "Weight: ",
-                #print self.rbm.connections[self.rbm['visible']][0].params.reshape( \
+                #print("Updated ")
+                #print("Weight: ",)
+                #print(self.rbm.connections[self.rbm['visible']][0].params.reshape( \)
                 #    (self.rbm.indim, self.rbm.outdim))
-                #print "Visible bias: ",
-                #print self.invRbm.connections[self.invRbm['bias']][0].params
-                #print "Hidden bias: ",
-                #print self.rbm.connections[self.rbm['bias']][0].params
-                #print ""
+                #print("Visible bias: ",)
+                #print(self.invRbm.connections[self.invRbm['bias']][0].params)
+                #print("Hidden bias: ",)
+                #print(self.rbm.connections[self.rbm['bias']][0].params)
+                #print("")
 
     def calcUpdateByRow(self, row):
         """This function trains the RBM using only one data row.
@@ -134,13 +134,13 @@ class RbmGibbsTrainer(Trainer):
         # compute the raw delta
         # !!! note that this delta is only the 'theoretical' delta
         return self.updater(pos, neg, poshb, neghb, posvb, negvb)
-        
+
     def sampler(self, probabilities):
         abstractMethod()
-        
+
     def updater(self, pos, neg, poshb, neghb, posvb, negvb):
         abstractMethod()
-        
+
     def calcUpdateByRows(self, rows):
         """Return a 3-tuple constisting of update for (weightmatrix,
         hidden bias weights, visible bias weights)."""
@@ -161,32 +161,32 @@ class RbmGibbsTrainer(Trainer):
 
         # !!! note that this delta is only the 'theoretical' delta
         return delta_w, delta_hb, delta_vb
-        
-        
+
+
 class RbmBernoulliTrainer(RbmGibbsTrainer):
-    
+
     def sampler(self, probabilities):
-        result = probabilities > random.rand(1, self.rbm.hiddenDim)
+        result = probabilities > random.rand(self.rbm.hiddenDim)
         return result.astype('int32')
-        
+
     def updater(self, pos, neg, poshb, neghb, posvb, negvb):
         return pos - neg, poshb - neghb, posvb - negvb
-        
-        
+
+
 class RbmGaussTrainer(RbmGibbsTrainer):
-    
+
     def __init__(self, rbm, dataset, cfg=None):
         super(RbmGaussTrainer, self).__init__(rbm, dataset, cfg)
         #samples = self.dataset[self.datasetField]
         # self.visibleVariances = samples.var(axis=0)
         self.visibleVariances = ones(rbm.net.outdim)
-    
+
     def sampler(self, probabilities):
         return random.normal(probabilities, self.visibleVariances)
 
     def updater(self, pos, neg, poshb, neghb, posvb, negvb):
         pos = pos / self.visibleVariances
         return pos - neg, poshb - neghb, posvb - negvb
-        
-        
-        
+
+
+

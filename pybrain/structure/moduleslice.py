@@ -4,12 +4,12 @@ from pybrain.utilities import Named
 
 
 class ModuleSlice(Named):
-    """ A wrapper for using a particular input-output slice of a module's buffers. 
-    The constructors of connections between ModuleSlices need to ensure a correct use 
+    """ A wrapper for using a particular input-output slice of a module's buffers.
+    The constructors of connections between ModuleSlices need to ensure a correct use
     (i.e) do the slicing on the base module directly. """
-    
+
     def __init__(self, base, inSliceFrom = 0, inSliceTo = None, outSliceFrom = 0, outSliceTo = None):
-        """ @param base: the base module that is sliced """
+        """ :key base: the base module that is sliced """
         if isinstance(base, ModuleSlice):
             # tolerantly handle the case of a slice of another slice
             self.base = base.base
@@ -33,7 +33,6 @@ class ModuleSlice(Named):
         self.indim = inSliceTo - inSliceFrom
         self.outdim = outSliceTo - outSliceFrom
         self.name += ('-slice:('+str(self.inOffset)+','+str(self.indim+self.inOffset)+')('
-                     +str(self.outOffset)+','+str(self.outdim+self.outOffset)+')')        
+                     +str(self.outOffset)+','+str(self.outdim+self.outOffset)+')')
         # some slicing is required
         assert self.indim+self.outdim < base.indim+base.outdim
-    

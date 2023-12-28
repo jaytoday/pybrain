@@ -2,7 +2,7 @@ __author__ = 'Michael Isik'
 
 
 from numpy.random import permutation
-from numpy import array,array_split, apply_along_axis, concatenate, ones, dot, delete, append, zeros, argmax
+from numpy import array, array_split, apply_along_axis, concatenate, ones, dot, delete, append, zeros, argmax
 import copy
 from pybrain.datasets.importance import ImportanceDataSet
 from pybrain.datasets.sequential import SequentialDataSet
@@ -22,34 +22,37 @@ class Validator(object):
     @classmethod
     def classificationPerformance(cls, output, target):
         """ Returns the hit rate of the outputs compared to the targets.
-            @param output: array of output values
-            @param target: array of target values
+
+            :arg output: array of output values
+            :arg target: array of target values
         """
         output = array(output)
         target = array(target)
         assert len(output) == len(target)
-        n_correct = sum( output == target )
+        n_correct = sum(output == target)
         return float(n_correct) / float(len(output))
 
     @classmethod
     def ESS(cls, output, target):
         """ Returns the explained sum of squares (ESS).
-            @param output: array of output values
-            @param target: array of target values
+
+            :arg output: array of output values
+            :arg target: array of target values
         """
-        return sum( (output-target)**2 )
+        return sum((output - target) ** 2)
 
     @classmethod
-    def MSE(cls, output, target, importance = None):
+    def MSE(cls, output, target, importance=None):
         """ Returns the mean squared error. The multidimensional arrays will get
             flattened in order to compare them.
-            @param output: array of output values
-            @param target: array of target values
-            @param importance: each squared error will be multiplied with its
-                               corresponding importance value. After summing
-                               up these values, the result will be divided by the
-                               sum of all importance values for normalization
-                               purposes.
+
+            :arg output: array of output values
+            :arg target: array of target values
+            :key importance: each squared error will be multiplied with its
+                corresponding importance value. After summing
+                up these values, the result will be divided by the
+                sum of all importance values for normalization
+                purposes.
         """
         # assert equal shapes
         output = array(output)
@@ -60,16 +63,16 @@ class Validator(object):
             importance = importance.flatten()
 
         # flatten structures
-        output     = output.flatten()
-        target     = target.flatten()
+        output = output.flatten()
+        target = target.flatten()
 
         if importance is None:
             importance = ones(len(output))
 
 
         # calculate mse
-        squared_error = (output-target)**2
-        mse = dot(squared_error,importance)/sum(importance)
+        squared_error = (output - target) ** 2
+        mse = dot(squared_error, importance) / sum(importance)
 
 
         return mse
@@ -87,11 +90,12 @@ class ClassificationHelper(object):
     def oneOfManyToClasses(cls, data):
         """ Converts data in one-of-many format to class indices format and
             and returns the result.
-            @param data: array of vectors, that are in the one-of-many format.
+
+            :arg data: array of vectors, that are in the one-of-many format.
                          Each vector will be converted to the index of the
                          component with the maximum value.
         """
-        return apply_along_axis( argmax, 1, data )
+        return apply_along_axis(argmax, 1, data)
 
 
 
@@ -107,19 +111,21 @@ class SequenceHelper(object):
     def getSequenceEnds(cls, dataset):
         """ Returns the indices of the last elements of the sequences stored
             inside dataset.
-            @param dataset: Must implement pybrain's SequentialDataSet
+
+            :arg dataset: Must implement :class:`SequentialDataSet`
         """
-        sequence_ends = delete(dataset.getField('sequence_index')-1,0)
-        sequence_ends = append(sequence_ends, dataset.getLength()-1)
-#        print sequence_ends; exit()
-        sequence_ends=array(sequence_ends)
+        sequence_ends = delete(dataset.getField('sequence_index') - 1, 0)
+        sequence_ends = append(sequence_ends, dataset.getLength() - 1)
+#        print(sequence_ends; exit())
+        sequence_ends = array(sequence_ends)
         return sequence_ends
 
     @classmethod
     def getSequenceStarts(cls, dataset):
         """ Returns the indices of the first elements of the sequences stored
             inside dataset.
-            @param dataset: Must implement pybrain's SequentialDataSet
+
+            :arg dataset: Must implement :class:`SequentialDataSet`
         """
         return  list(dataset.getField('sequence_index'))
 
@@ -127,7 +133,8 @@ class SequenceHelper(object):
     def getSequenceEndsImportance(cls, dataset):
         """ Returns the importance values of the last elements of the sequences
             stored inside dataset.
-            @param dataset: Must implement pybrain's ImportanceDataSet
+
+            :arg dataset: Must implement :class:`ImportanceDataSet`
         """
         importance = zeros(dataset.getLength())
         importance[cls.getSequenceEnds(dataset)] = 1.
@@ -150,26 +157,28 @@ class ModuleValidator(object):
     def classificationPerformance(cls, module, dataset):
         """ Returns the hit rate of the module's output compared to the targets
             stored inside dataset.
-            @param module: Object of any subclass of pybrain's Module type
-            @param dataset: Dataset object at least containing the fields
-                            'input' and 'target' (for example SupervisedDataSet)
+
+            :arg module: Object of any subclass of pybrain's Module type
+            :arg dataset: Dataset object at least containing the fields
+                'input' and 'target' (for example SupervisedDataSet)
         """
         return ModuleValidator.validate(
             Validator.classificationPerformance,
             module,
-            dataset )
+            dataset)
 
     @classmethod
     def MSE(cls, module, dataset):
         """ Returns the mean squared error.
-            @param module: Object of any subclass of pybrain's Module type
-            @param dataset: Dataset object at least containing the fields
-                            'input' and 'target' (for example SupervisedDataSet)
+
+            :arg module: Object of any subclass of pybrain's Module type
+            :arg dataset: Dataset object at least containing the fields
+                'input' and 'target' (for example SupervisedDataSet)
         """
         return ModuleValidator.validate(
             Validator.MSE,
             module,
-            dataset )
+            dataset)
 
 
     @classmethod
@@ -179,20 +188,20 @@ class ModuleValidator(object):
             In advance, it compares the output to the target values of the dataset
             through the valfunc function and returns the result.
 
-            @param valfunc: A function expecting arrays for output, target and
-                            importance (optional). See Validator.MSE for an example.
-            @param module:  Object of any subclass of pybrain's Module type
-            @param dataset: Dataset object at least containing the fields
-                            'input' and 'target' (for example SupervisedDataSet)
+            :arg valfunc: A function expecting arrays for output, target and
+                importance (optional). See Validator.MSE for an example.
+            :arg module:  Object of any subclass of pybrain's Module type
+            :arg dataset: Dataset object at least containing the fields
+                'input' and 'target' (for example SupervisedDataSet)
         """
         target = dataset.getField('target')
         output = ModuleValidator.calculateModuleOutput(module, dataset)
 
         if isinstance(dataset, ImportanceDataSet):
             importance = dataset.getField('importance')
-            return valfunc( output, target, importance )
+            return valfunc(output, target, importance)
         else:
-            return valfunc( output, target )
+            return valfunc(output, target)
 
 
     @classmethod
@@ -200,12 +209,13 @@ class ModuleValidator(object):
         """ Calculates the module's output on the dataset. Especially designed
             for datasets storing sequences.
             After a sequence is fed to the module, it has to be resetted.
-            @param dataset: Dataset object of type SequentialDataSet or subclass.
+
+            :arg dataset: Dataset object of type SequentialDataSet or subclass.
         """
         outputs = []
         for seq in dataset._provideSequences():
             module.reset()
-            for i in xrange(len(seq)):
+            for i in range(len(seq)):
                 output = module.activate(seq[i][0])
                 outputs.append(output.copy())
         outputs = array(outputs)
@@ -216,13 +226,14 @@ class ModuleValidator(object):
     def calculateModuleOutput(cls, module, dataset):
         """ Calculates the module's output on the dataset. Can be called with
             any type of dataset.
-            @param dataset: Any Dataset object containing an 'input' field.
+
+            :arg dataset: Any Dataset object containing an 'input' field.
         """
-        if isinstance(dataset,SequentialDataSet) or isinstance(dataset,ImportanceDataSet):
-            return cls._calculateModuleOutputSequential(module,dataset)
+        if isinstance(dataset, SequentialDataSet) or isinstance(dataset, ImportanceDataSet):
+            return cls._calculateModuleOutputSequential(module, dataset)
         else:
             module.reset()
-            input  = dataset.getField('input')
+            input = dataset.getField('input')
             output = array([module.activate(inp) for inp in input])
             return output
 
@@ -244,12 +255,12 @@ class CrossValidator(object):
         The the mean of the calculated validation results will be returned.
     """
     def __init__(self, trainer, dataset, n_folds=5, valfunc=ModuleValidator.classificationPerformance, **kwargs):
-        """ @param trainer: Trainer containing a module to be trained
-            @param dataset: Dataset for training and testing
-            @param n_folds: Number of pieces, the dataset will be splitted to
-            @param valfunc: Validation function. Should expect a module and a dataset.
+        """ :arg trainer: Trainer containing a module to be trained
+            :arg dataset: Dataset for training and testing
+            :key n_folds: Number of pieces, the dataset will be splitted to
+            :key valfunc: Validation function. Should expect a module and a dataset.
                             E.g. ModuleValidator.MSE()
-            @param others: see setArgs() method
+            :key others: see setArgs() method
         """
         self._trainer = trainer
         self._dataset = dataset
@@ -258,51 +269,52 @@ class CrossValidator(object):
         self._max_epochs = None
         self.setArgs(**kwargs)
 
-    def setArgs(self,**kwargs):
+    def setArgs(self, **kwargs):
         """ Set the specified member variables.
-        @param max_epochs: maximum number of epochs the trainer should train the module for.
-        @param verbosity: set verbosity level
+
+        :key max_epochs: maximum number of epochs the trainer should train the module for.
+        :key verbosity: set verbosity level
         """
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             if key in ("verbose", "ver", "v"):
                 self._verbosity = value
             elif key in ("max_epochs"):
                 self._max_epochs = value
 
-    def validate( self ):
+    def validate(self):
         """ The main method of this class. It runs the crossvalidation process
             and returns the validation result (e.g. performance).
         """
         dataset = self._dataset
         trainer = self._trainer
         n_folds = self._n_folds
-        l       = dataset.getLength()
-        inp     = dataset.getField("input")
-        tar     = dataset.getField("target")
-        indim   = dataset.indim
-        outdim  = dataset.outdim
+        l = dataset.getLength()
+        inp = dataset.getField("input")
+        tar = dataset.getField("target")
+        indim = dataset.indim
+        outdim = dataset.outdim
         assert l > n_folds
 
-        perms = array_split( permutation(l), n_folds )
+        perms = array_split(permutation(l), n_folds)
 
         perf = 0.
         for i in range(n_folds):
             # determine train indices
-            train_perms_idxs = range(n_folds)
+            train_perms_idxs = list(range(n_folds))
             train_perms_idxs.pop(i)
             temp_list = []
             for train_perms_idx in train_perms_idxs:
-                temp_list.append( perms[ train_perms_idx ] )
+                temp_list.append(perms[ train_perms_idx ])
             train_idxs = concatenate(temp_list)
 
             # determine test indices
             test_idxs = perms[i]
 
             # train
-            #print "training iteration", i
-            train_ds = SupervisedDataSet(indim,outdim)
-            train_ds.setField( "input"  , inp[train_idxs] )
-            train_ds.setField( "target" , tar[train_idxs] )
+            #print("training iteration", i)
+            train_ds = SupervisedDataSet(indim, outdim)
+            train_ds.setField("input"  , inp[train_idxs])
+            train_ds.setField("target" , tar[train_idxs])
             trainer = copy.deepcopy(self._trainer)
             trainer.setData(train_ds)
             if not self._max_epochs:
@@ -311,12 +323,12 @@ class CrossValidator(object):
                 trainer.trainEpochs(self._max_epochs)
 
             # test
-            #print "testing iteration", i
-            test_ds = SupervisedDataSet(indim,outdim)
-            test_ds.setField( "input"  , inp[test_idxs] )
-            test_ds.setField( "target" , tar[test_idxs] )
+            #print("testing iteration", i)
+            test_ds = SupervisedDataSet(indim, outdim)
+            test_ds.setField("input"  , inp[test_idxs])
+            test_ds.setField("target" , tar[test_idxs])
 #            perf += self.getPerformance( trainer.module, dataset )
-            perf += self._calculatePerformance( trainer.module, dataset )
+            perf += self._calculatePerformance(trainer.module, test_ds)
 
         perf /= n_folds
         return perf
@@ -342,42 +354,42 @@ class CrossValidator(object):
 
 
 
-def testOnSequenceData(module, dataset): 
+def testOnSequenceData(module, dataset):
     """ Fetch targets and calculate the modules output on dataset.
     Output and target are in one-of-many format. The class for each sequence is
-    determined by first summing the probabilities for each individual sample over 
+    determined by first summing the probabilities for each individual sample over
     the sequence, and then finding its maximum."""
     target = dataset.getField("target")
-    output = ModuleValidator.calculateModuleOutput(module,dataset)
+    output = ModuleValidator.calculateModuleOutput(module, dataset)
 
     # determine last indices of the sequences inside dataset
     ends = SequenceHelper.getSequenceEnds(dataset)
     ##format = "%d"*len(ends)
-    summed_output  = zeros(dataset.outdim)
+    summed_output = zeros(dataset.outdim)
     # class_output and class_target will store class labels instead of
     # one-of-many values
     class_output = []
     class_target = []
-    for j in xrange(len(output)):
+    for j in range(len(output)):
         # sum up the output values of one sequence
         summed_output += output[j]
-#            print j, output[j], " --> ", summed_output
+#            print(j, output[j], " --> ", summed_output)
         # if we reached the end of the sequence
         if j in ends:
             # convert summed_output and target to class labels
-            class_output.append( argmax(summed_output) )
-            class_target.append( argmax(target[j]) )
+            class_output.append(argmax(summed_output))
+            class_target.append(argmax(target[j]))
 
             # reset the summed_output to zeros
             summed_output = zeros(dataset.outdim)
 
-    ##print format % tuple(class_output)
-    ##print format % tuple(class_target)
-    
+    ##print(format % tuple(class_output))
+    ##print(format % tuple(class_target))
+
     class_output = array(class_output)
     class_target = array(class_target)
-#    print class_target
-#    print class_output
+#    print(class_target)
+#    print(class_output)
     return Validator.classificationPerformance(class_output, class_target)
 
 

@@ -1,6 +1,6 @@
 __author__ = 'Thomas Rueckstiess, ruecksti@in.tum.de'
 
-import ode, xode
+import ode, xode #@UnresolvedImport
 from pybrain.utilities import Named
 import sys, warnings
 
@@ -8,7 +8,7 @@ class Actuator(Named):
     """The base Actuator class. Every actuator has a name, and a list of values (even if it is
         only one value) with numValues entries. They can be added to the ODEEnvironment with
         its addActuator(...) function. Actuators receive the world model when added to the world."""
-        
+
     def __init__(self, name, numValues):
         self._numValues = numValues
         self.name = name
@@ -51,14 +51,14 @@ class JointActuator(Actuator):
 
     def _connect(self, world):
         Actuator._connect(self, world)
-        
+
         # get XODE Root and parse its joints
         self._joints = []
         self._parseJoints(self._world.getXODERoot())
 
         # do initial update to get numValues
         self._numValues = self._countValues()
-    
+
     def _countValues(self):
         num = 0
         for j in self._joints:
@@ -73,7 +73,7 @@ class JointActuator(Actuator):
             elif type(j) == ode.Hinge2Joint:
                 num += 2
             elif type(j) == ode.SliderJoint:
-                pass 
+                pass
         return num
 
     def _update(self, action):
@@ -91,7 +91,7 @@ class JointActuator(Actuator):
                 for _ in range(num):
                     torques.append(action[0])
                     action = action[1:]
-                for _ in range(3-num):
+                for _ in range(3 - num):
                     torques.append(0)
                 (t1, t2, t3) = torques
                 j.addTorques(t1, t2, t3)
@@ -113,7 +113,7 @@ class JointActuator(Actuator):
 
 class SpecificJointActuator(JointActuator):
     ''' This sensor takes a list of joint names, and controlls only their values. '''
-    
+
     def __init__(self, jointNames, name=None):
         Actuator.__init__(self, name, 0)
         self._names = jointNames
@@ -130,19 +130,19 @@ class SpecificJointActuator(JointActuator):
 
     def _connect(self, world):
         Actuator._connect(self, world)
-        
+
         # get XODE Root and parse its joints
         self._joints = []
         self._parseJoints()
 
         # do initial update to get numValues
         self._numValues = self._countValues()
-        
-        
+
+
 class CopyJointActuator(JointActuator):
     ''' This sensor takes a list of joint names and controls all joints at once (one single value,
         even for multiple hinges/amotors) '''
-    
+
     def __init__(self, jointNames, name=None):
         Actuator.__init__(self, name, 0)
         self._names = jointNames
@@ -159,14 +159,14 @@ class CopyJointActuator(JointActuator):
 
     def _connect(self, world):
         Actuator._connect(self, world)
-        
+
         # get XODE Root and parse its joints
         self._joints = []
         self._parseJoints()
 
         # pretend to have only one single value
         self._numValues = 1
-        
+
     def _update(self, action):
         assert (len(action) == self._numValues)
         for j in self._joints:
@@ -181,10 +181,10 @@ class CopyJointActuator(JointActuator):
                 torques = []
                 for _ in range(num):
                     torques.append(action[0])
-                for _ in range(3-num):
+                for _ in range(3 - num):
                     torques.append(0)
                 (t1, t2, t3) = torques
-                j.addTorques(t1*10, t2*10, t3*10)
+                j.addTorques(t1 * 10, t2 * 10, t3 * 10)
             elif type(j) == ode.HingeJoint:
                 # hinge joints have only one axis to add torque to
                 j.addTorque(action[0])
@@ -197,3 +197,4 @@ class CopyJointActuator(JointActuator):
                 # therefore, you can (must) set a torque but it is not applied
                 # to the joint.
                 pass
+

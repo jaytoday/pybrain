@@ -1,63 +1,68 @@
-__author__ = 'Tom Schaul, tom@idsia.ch'
+""" The top of the learner hierarchy is more conceptual than functional.
+The different classes distinguish algorithms in such a way that we can automatically
+determine when an algorithm is not applicable for a problem. """
 
-from pybrain.utilities import abstractMethod, Named
+__author__ = 'Tom Schaul, tom@idsia.ch, Thomas Rueckstiess, ruecksti@in.tum.de'
 
 
-class Learner(Named):
-    """Takes as input a callable `evaluator` an object that can be evaluated
-    by calling it with it as an argument, with that. The result of an evaluation
-    is a real number, which the Learner attempts to maximize. 
+from pybrain.utilities import abstractMethod
+import logging
 
-    It tries to achieve this by changing the internals of the evaluable. An
-    evaluable object must have a .copy() method. It could be an instance of 
-    e.g. numpy.array, ParameterContainer or Evolvable."""
-    
-    desiredEvaluation = None
-    maxEvaluations = None
-    
-    # global flag for enabling plenty of information being written during the learning
-    verbose = False
-    
-    
-    def __init__(self, evaluator, evaluable, listener=None, **args):
-        self.listener = listener
-        self.setArgs(**args)
-        self.evaluator = evaluator
-        self.bestEvaluable = evaluable.copy()
-        self.bestEvaluation = self.evaluator(self.bestEvaluable)
-        if hasattr(evaluator, 'desiredValue'):
-            self.desiredEvaluation = evaluator.desiredValue
-        self.steps = 1
-        
-    def notify(self):
-        """Sends the current bestEvaluable and bestEvaluation to the listener.
-        """
-        if self.listener is not None:
-            self.listener(self.bestEvaluable, self.bestEvaluation)
-        
-    def learn(self, maxSteps = None):
-        """ @return: (best evaluable found, best fitness) """
-        if maxSteps != None:
-            maxSteps += self.steps
-        while True:
-            if maxSteps != None and self.steps >= maxSteps:
-                break
-            if self.maxEvaluations != None and self.steps >= self.maxEvaluations:
-                break
-            if self.desiredEvaluation != None and self.bestEvaluation >= self.desiredEvaluation:
-                break
-            if self._stoppingCriterion():
-                break
-            self._learnStep()
-            self.steps += 1
-            self.notify()
-        return self.bestEvaluable, self.bestEvaluation
-    
-    def _learnStep(self):
-        """ do as much learning as possible, but while only doing a single evaluation. 
-        This method should update self.bestEvaluable and self.bestEvaluation """
+
+class Learner(object):
+    """ Top-level class for all reinforcement learning algorithms.
+    Any learning algorithm changes a policy (in some way) in order
+    to increase the expected reward/fitness.
+    """
+
+    module = None
+
+    def learn(self):
+        """ The main method, that invokes a learning step. """
         abstractMethod()
-        
-    def _stoppingCriterion(self):
-        """ subclasses can specify particular stopping criteria """
-        return False
+
+
+class ExploringLearner(Learner):
+    """ A Learner determines how to change the adaptive parameters of a module.
+    """
+
+    explorer = None
+
+    def explore(self, state, action):
+        if self.explorer is not None:
+            return self.explorer.activate(state, action)
+        else:
+            # logging.warning("No explorer found: no exploration could be done.")
+            return action
+
+
+class EpisodicLearner(Learner):
+    """ Assumes the task is episodic, not life-long,
+    and therefore does a learning step only after the end of each episode. """
+
+    def learnEpisodes(self, episodes = 1, *args, **kwargs):
+        """ learn on the current dataset, for a number of episodes """
+        for _ in range(episodes):
+            self.learn(*args, **kwargs)
+
+    def newEpisode(self):
+        """ informs the learner that a new episode has started. """
+        if self.explorer is not None:
+            self.explorer.newEpisode()
+
+    def reset(self):
+        pass
+
+
+class DataSetLearner(EpisodicLearner):
+    """ A class for learners that learn from a dataset, which has no target output but
+        only a reinforcement signal for each sample. It requires a
+        ReinforcementDataSet object (which provides state-action-reward tuples). """
+
+    dataset = None
+
+    def learnOnDataset(self, dataset, *args, **kwargs):
+        """ set the dataset, and learn """
+        self.dataset = dataset
+        self.learnEpisodes(*args, **kwargs)
+

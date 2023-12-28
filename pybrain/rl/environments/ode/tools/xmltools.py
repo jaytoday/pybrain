@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 __author__ = 'Thomas Rueckstiess, ruecksti@in.tum.de'
 
 import sys
@@ -32,9 +34,9 @@ class XMLstruct:
     def __iter__(self):
         """returns the top-level list of tags (including internal tags 'Icontain' and 'myName')"""
         return self.tag
-    
-    
-    def insert(self,name,attr=None):
+
+
+    def insert(self, name, attr=None):
         """Insert a new tag into the current one. The name can be either the
         new tag name or an XMLstruct object (in which case attr is ignored).
         Unless name is None, we descend into the new tag as a side effect.
@@ -47,7 +49,7 @@ class XMLstruct:
             return
         elif type(name) == str:
             # create a new subtag with given name and attributes
-            newtag = XMLstruct(name,attr)
+            newtag = XMLstruct(name, attr)
         else:
             # input assumed to be a tag structure
             newtag = name
@@ -64,7 +66,7 @@ class XMLstruct:
         self.current.tag['Icontain'] += attrlist
 
 
-    def downTo(self,name,stack=None,current=None):
+    def downTo(self, name, stack=None, current=None):
         """Traverse downward from current tag, until given named tag is found. Returns
         true if found and sets stack and current tag correspondingly."""
         if stack is None:
@@ -83,7 +85,7 @@ class XMLstruct:
                     # no subtag of correct name found; recursively check whether
                     # any of the subtags contain the looked for tag
                     for subtag in self.tag['Icontain']:
-                        found = subtag.downTo(name,stack,current)
+                        found = subtag.downTo(name, stack, current)
                         if found:
                             # everything was updated recursively, need only return
                             return(True)
@@ -92,11 +94,11 @@ class XMLstruct:
                     return(False)
 
                 else:
-                    current.setCurrent( found )
+                    current.setCurrent(found)
                     return(True)
 
 
-    def up(self,steps=1):
+    def up(self, steps=1):
         """traverse upward a number of steps in tag stack"""
         for _ in range(steps):
             if self.stack != []:
@@ -116,14 +118,14 @@ class XMLstruct:
 
     def getCurrentSubtags(self):
         if self.current.hasSubtag():
-            return( self.current.tag['Icontain'] )
+            return(self.current.tag['Icontain'])
         else:
             return([])
 
-    def hasSubtag(self,name=None):
+    def hasSubtag(self, name=None):
         """determine whether current tag contains other tags, and returns
         the tag with a matching name (if name is given) or True (if not)"""
-        if self.tag.has_key('Icontain'):
+        if 'Icontain' in self.tag:
             if name is None:
                 return(True)
             else:
@@ -132,56 +134,56 @@ class XMLstruct:
         return(False)
 
 
-    def getSubtag(self,name=None):
+    def getSubtag(self, name=None):
         """determine whether current tag contains other tags, and returns
         the tag with a matching name (if name is given) or None (if not)"""
-        if self.tag.has_key('Icontain'):
+        if 'Icontain' in self.tag:
             for subtag in self.tag['Icontain']:
                 if subtag.name == name: return(subtag)
         return(None)
 
     def nbAttributes(self):
         """return number of user attributes the current tag has"""
-        nAttr = len(self.tag.keys()) - 1
+        nAttr = len(list(self.tag.keys())) - 1
         if self.hasSubtag():
             nAttr -= 1
         return nAttr
-    
-    
-    def scale(self,sc,scaleset=set([]),exclude=set([])):
+
+
+    def scale(self, sc, scaleset=set([]), exclude=set([])):
         """for all tags not in the exclude set, scale all attributes whose names are in scaleset by the given factor"""
         if self.name not in exclude:
-            for name,val in self.tag.iteritems():
+            for name, val in self.tag.items():
                 if name in scaleset:
-                    self.tag[name] = val*sc
+                    self.tag[name] = val * sc
         if self.hasSubtag():
             for subtag in self.tag['Icontain']:
-                subtag.scale(sc,scaleset,exclude)
-            
-            
+                subtag.scale(sc, scaleset, exclude)
+
+
     def write(self, file, depth=0):
         """parse XML structure recursively and append to the output fileID,
         increasing the offset (tabs) while descending into the tree"""
-        if not self.tag.has_key('myName'):
-            print "Error parsing XML structure: Tag name missing!"
+        if 'myName' not in self.tag:
+            print("Error parsing XML structure: Tag name missing!")
             sys.exit(1)
         # find number of attributes (disregarding special keys)
         nAttr = self.nbAttributes()
         endmark = '/>'
         if self.hasSubtag():
             endmark = '>'
-        # print start tag, with attributes if present
+        # print(start tag, with attributes if present)
         if nAttr > 0:
-            file.write(self._tab*depth+"<"+self.tag['myName']+" "+ \
-                ' '.join([name+'="'+str(val)+'"' for name,val in self.tag.iteritems() \
-                if name != 'myName' and name != 'Icontain']) + endmark+'\n')
+            file.write(self._tab * depth + "<" + self.tag['myName'] + " " + \
+                ' '.join([name + '="' + str(val) + '"' for name, val in self.tag.items() \
+                if name != 'myName' and name != 'Icontain']) + endmark + '\n')
         else:
-            file.write(self._tab*depth+"<"+self.tag['myName']+">\n")
-        # print enclosed tags, if any
+            file.write(self._tab * depth + "<" + self.tag['myName'] + ">\n")
+        # print(enclosed tags, if any)
         if self.hasSubtag():
             for subtag in self.tag['Icontain']:
-                subtag.write(file, depth=depth+1)
+                subtag.write(file, depth=depth + 1)
             # finalize tag
-            file.write(self._tab*depth+"</"+self.tag['myName']+">\n")
+            file.write(self._tab * depth + "</" + self.tag['myName'] + ">\n")
 
 

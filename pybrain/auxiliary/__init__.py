@@ -1,2 +1,3 @@
-from gradientdescent import GradientDescent
-from gaussprocess import GaussianProcess
+from pybrain.auxiliary.gradientdescent import GradientDescent
+from pybrain.auxiliary.gaussprocess import GaussianProcess
+from pybrain.auxiliary.importancemixing import importanceMixing

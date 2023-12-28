@@ -1,19 +1,23 @@
+from __future__ import print_function
+
 __author__ = 'Thomas Rueckstiess, ruecksti@in.tum.de'
 
+from numpy import random
 from random import sample
 from scipy import isscalar
 
-from dataset import DataSet
+from pybrain.datasets.dataset import DataSet
 from pybrain.utilities import fListToString
-    
-class SupervisedDataSet(DataSet): 
+
+
+class SupervisedDataSet(DataSet):
     """SupervisedDataSets have two fields, one for input and one for the target.
     """
-    
+
     def __init__(self, inp, target):
-        """Initialize an empty supervised dataset. 
-        
-        Pass `inp` and `target` to specify the dimensions of the input and 
+        """Initialize an empty supervised dataset.
+
+        Pass `inp` and `target` to specify the dimensions of the input and
         target vectors."""
         DataSet.__init__(self)
         if isscalar(inp):
@@ -23,31 +27,31 @@ class SupervisedDataSet(DataSet):
         else:
             self.setField('input', inp)
             self.setField('target', target)
-        
-        self.linkFields(['input', 'target'])    
-        
+
+        self.linkFields(['input', 'target'])
+
         # reset the index marker
         self.index = 0
-        
+
         # the input and target dimensions
         self.indim = self.getDimension('input')
         self.outdim = self.getDimension('target')
-         
+
     def __reduce__(self):
         _, _, state, _, _ = super(SupervisedDataSet, self).__reduce__()
         creator = self.__class__
         args = self.indim, self.outdim
         return creator, args, state, iter([]), iter({})
-        
+
     def addSample(self, inp, target):
         """Add a new sample consisting of `input` and `target`."""
         self.appendLinked(inp, target)
-    
+
     def getSample(self, index=None):
         """Return a sample at `index` or the current sample."""
         return self.getLinked(index)
-        
-    def setField(self, label, arr, **kwargs): 
+
+    def setField(self, label, arr, **kwargs):
         """Set the given array `arr` as the new array of the field specfied by
         `label`."""
         DataSet.setField(self, label, arr, **kwargs)
@@ -56,12 +60,12 @@ class SupervisedDataSet(DataSet):
             self.indim = self.getDimension('input')
         elif label == 'target':
             self.outdim = self.getDimension('target')
-    
+
     def _provideSequences(self):
         """Return an iterator over sequence lists, although the dataset contains
         only single samples."""
-        return iter(map(lambda x: [x], iter(self)))
-    
+        return iter([[x] for x in iter(self)])
+
     def evaluateMSE(self, f, **args):
         """Evaluate the predictions of a function on the dataset and return the
         Mean Squared Error, incorporating importance."""
@@ -70,10 +74,10 @@ class SupervisedDataSet(DataSet):
         for seq in self._provideSequences():
             e, p = self._evaluateSequence(f, seq, **args)
             totalError += e
-            ponderation += p  
-        assert ponderation > 0          
-        return totalError/ponderation        
-        
+            ponderation += p
+        assert ponderation > 0
+        return totalError/ponderation
+
     def _evaluateSequence(self, f, seq, verbose = False):
         """Return the ponderated MSE over one sequence."""
         totalError = 0.
@@ -84,11 +88,11 @@ class SupervisedDataSet(DataSet):
             totalError += e
             ponderation += len(target)
             if verbose:
-                print     'out:    ', fListToString( list( res ) )
-                print     'correct:', fListToString( target )
-                print     'error: % .8f' % e
-        return totalError, ponderation                
-        
+                print((    'out:    ', fListToString( list( res ) )))
+                print((    'correct:', fListToString( target )))
+                print((    'error: % .8f' % e))
+        return totalError, ponderation
+
     def evaluateModuleMSE(self, module, averageOver = 1, **args):
         """Evaluate the predictions of a module on a dataset and return the MSE
         (potentially average over a number of epochs)."""
@@ -97,23 +101,19 @@ class SupervisedDataSet(DataSet):
             module.reset()
             res += self.evaluateMSE(module.activate, **args)
         return res/averageOver
-        
+
     def splitWithProportion(self, proportion = 0.5):
         """Produce two new datasets, the first one containing the fraction given
         by `proportion` of the samples."""
-        leftIndices = sample(range(len(self)), int(len(self)*proportion))
-        leftDs = self.copy()
-        leftDs.clear()
-        rightDs = leftDs.copy()
-        index = 0
-        for sp in self:
-            if index in leftIndices:
-                leftDs.addSample(*sp)
-            else:
-                rightDs.addSample(*sp)
-            index += 1
+        indicies = random.permutation(len(self))
+        separator = int(len(self) * proportion)
+
+        leftIndicies = indicies[:separator]
+        rightIndicies = indicies[separator:]
+
+        leftDs = SupervisedDataSet(inp=self['input'][leftIndicies].copy(),
+                                   target=self['target'][leftIndicies].copy())
+        rightDs = SupervisedDataSet(inp=self['input'][rightIndicies].copy(),
+                                    target=self['target'][rightIndicies].copy())
         return leftDs, rightDs
-        
-        
-        
-        
+

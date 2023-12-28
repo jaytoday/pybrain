@@ -14,15 +14,17 @@
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
 # absolute, like shown here.
-# >>> import sys, os
-# >>> sys.path.append(os.path.abspath('some/directory'))
+import sys
+sys.path.append(__file__.rsplit('docs', 1)[0])
 
 # General configuration
 # ---------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.inheritance_diagram',
+              'sphinx.ext.pngmath']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -35,15 +37,15 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'PyBrain'
-copyright = '2008, CogBotLab & Idsia'
+copyright = '2009, CogBotLab & Idsia'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.2'
+version = '0.3'
 # The full version, including alpha/beta/rc tags.
-release = '0.2'
+release = '0.3'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

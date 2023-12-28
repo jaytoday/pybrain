@@ -1,31 +1,32 @@
 __author__ = 'Daan Wierstra and Tom Schaul'
 
+from itertools import chain
+
 from scipy import zeros
 
 from pybrain.structure.networks.feedforward import FeedForwardNetwork
 from pybrain.structure.networks.recurrent import RecurrentNetwork
 from pybrain.structure.modules.neuronlayer import NeuronLayer
 from pybrain.structure.connections import FullConnection
-from pybrain.utilities import combineLists
 
 # CHECKME: allow modules that do not inherit from NeuronLayer? and treat them as single neurons?
 
 
 class NeuronDecomposableNetwork(object):
-    """ A Network, that allows accessing parameters decomposed by their 
+    """ A Network, that allows accessing parameters decomposed by their
     corresponding individual neuron. """
-    
+
     # ESP style treatment:
     espStyleDecomposition = True
-    
+
     def addModule(self, m):
         assert isinstance(m, NeuronLayer)
         super(NeuronDecomposableNetwork, self).addModule(m)
-        
+
     def sortModules(self):
         super(NeuronDecomposableNetwork, self).sortModules()
         self._constructParameterInfo()
-        
+
         # contains a list of lists of indices
         self.decompositionIndices = {}
         for neuron in self._neuronIterator():
@@ -36,12 +37,12 @@ class NeuronDecomposableNetwork(object):
                 self.decompositionIndices[inneuron].append(w)
             else:
                 self.decompositionIndices[outneuron].append(w)
-        
+
     def _neuronIterator(self):
         for m in self.modules:
             for n in range(m.dim):
                 yield (m, n)
-            
+
     def _constructParameterInfo(self):
         """ construct a dictionnary with information about each parameter:
         The key is the index in self.params, and the value is a tuple containing
@@ -53,15 +54,15 @@ class NeuronDecomposableNetwork(object):
             if isinstance(x, FullConnection):
                 for w in range(x.paramdim):
                     inbuf, outbuf = x.whichBuffers(w)
-                    self.paramInfo[index+w] = ((x.inmod, x.inmod.whichNeuron(outputIndex = inbuf)),
-                                               (x.outmod, x.outmod.whichNeuron(inputIndex = outbuf)))
+                    self.paramInfo[index + w] = ((x.inmod, x.inmod.whichNeuron(outputIndex=inbuf)),
+                                               (x.outmod, x.outmod.whichNeuron(inputIndex=outbuf)))
             elif isinstance(x, NeuronLayer):
                 for n in range(x.paramdim):
-                    self.paramInfo[index+n] = ((x,n),(x,n))
+                    self.paramInfo[index + n] = ((x, n), (x, n))
             else:
                 raise
             index += x.paramdim
-        
+
     def getDecomposition(self):
         """ return a list of arrays, each corresponding to one neuron's relevant parameters """
         res = []
@@ -73,7 +74,7 @@ class NeuronDecomposableNetwork(object):
                     tmp[i] = self.params[ni]
                 res.append(tmp)
         return res
-                
+
     def setDecomposition(self, decomposedParams):
         """ set parameters by neuron decomposition,
         each corresponding to one neuron's relevant parameters """
@@ -84,14 +85,14 @@ class NeuronDecomposableNetwork(object):
                 for i, ni in enumerate(nIndices):
                     self.params[ni] = decomposedParams[nindex][i]
                 nindex += 1
-                
+
     @staticmethod
     def convertNormalNetwork(n):
         """ convert a normal network into a decomposable one """
         if isinstance(n, RecurrentNetwork):
             res = RecurrentDecomposableNetwork()
             for c in n.recurrentConns:
-                    res.addRecurrentConnection(c)
+                res.addRecurrentConnection(c)
         else:
             res = FeedForwardDecomposableNetwork()
         for m in n.inmodules:
@@ -100,16 +101,16 @@ class NeuronDecomposableNetwork(object):
             res.addOutputModule(m)
         for m in n.modules:
             res.addModule(m)
-        for c in combineLists(n.connections.values()):
+        for c in chain(*list(n.connections.values())):
             res.addConnection(c)
         res.name = n.name
         res.sortModules()
         return res
-        
-        
+
+
 class FeedForwardDecomposableNetwork(NeuronDecomposableNetwork, FeedForwardNetwork):
     pass
-    
-    
+
+
 class RecurrentDecomposableNetwork(NeuronDecomposableNetwork, RecurrentNetwork):
     pass

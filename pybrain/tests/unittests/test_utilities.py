@@ -1,19 +1,4 @@
 """
-    
-    >>> from pybrain.utilities import threaded
-    >>> import threading
-    
-    >>> result = None
-    >>> def callback(c):
-    ...   global result
-    ...   result = c
-    >>> @threaded(callback)
-    ... def threadname():
-    ...   return threading.currentThread().getName()
-    >>> threadname()
-    >>> result != threading.currentThread().getName()
-    True
-    
     >>> from pybrain.utilities import memoize
     >>> call_count = 0
     >>> @memoize
@@ -29,8 +14,8 @@
     'result'
     >>> call_count
     1
-    
-  
+
+
 Tests for Serializable
 ======================
 
@@ -43,7 +28,7 @@ Tests for Serializable
     >>> q = P.loadFromFileLike(s)
     >>> q.x
     2
-    
+
 
 
 Tests for permute
@@ -57,7 +42,7 @@ Tests for permute
            [0, 0, 0],
            [1, 1, 1]])
 
-    
+
 Tests for permuteToBlocks
 =========================
 
@@ -69,8 +54,8 @@ Tests for permuteToBlocks
     >>> arr = array(range(32)).reshape(2, 4, 4)
     >>> permuteToBlocks(arr, (2, 2, 2)).astype('int8').tolist()
     [0, 1, 4, 5, 16, 17, 20, 21, 2, 3, 6, 7, 18, 19, 22, 23, 8, 9, 12, 13, 24, 25, 28, 29, 10, 11, 14, 15, 26, 27, 30, 31]
-    
-    
+
+
 """
 
 
@@ -79,12 +64,12 @@ from pybrain.utilities import Serializable
 from pybrain.tests import runModuleTestSuite
 
 
-class P(Serializable): 
-    
-    def __getstate__(self): 
+class P(Serializable):
+
+    def __getstate__(self):
         return {'x': self.x}
 
-    def __setstate__(self, dct): 
+    def __setstate__(self, dct):
         self.x = dct['x']
 
 

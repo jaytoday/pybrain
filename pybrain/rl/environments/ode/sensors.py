@@ -1,6 +1,6 @@
 __author__ = 'Thomas Rueckstiess, ruecksti@in.tum.de'
 
-import ode, sys, xode
+import ode, sys, xode #@UnresolvedImport
 import warnings
 from scipy.linalg import norm
 from pybrain.utilities import Named
@@ -18,7 +18,7 @@ class Sensor(Named):
         only one value) with numValues entries. They can be added to the ODEEnvironment with
         its addSensor(...) function. Sensors get the world model when added to the world.
         Other information sources have to be taken manually by parsing the world object."""
-        
+
     def __init__(self, name, numValues):
         self._numValues = numValues
         self.name = name
@@ -143,7 +143,7 @@ class DistToPointSensor(Sensor):
         the current distance of the body to this point. if no point is given,
         the distance to the origin is returned. '''
 
-    def __init__(self, bodyName, name='DistToPointSensor', point=(0,0,0)):
+    def __init__(self, bodyName, name='DistToPointSensor', point=(0, 0, 0)):
         Sensor.__init__(self, name, 0)
         # initialize one return value
         self.setNumValues(1)
@@ -244,7 +244,7 @@ class SpecificJointSensor(JointSensor):
         Sensor._connect(self, world)
 
         # initialize object list - this should not change during runtime
-        self._joints = [] 
+        self._joints = []
         self._parseJoints()
 
         # do initial update to get numValues
@@ -275,14 +275,14 @@ class SpecificJointVelocitySensor(JointVelocitySensor):
         Sensor._connect(self, world)
 
         # initialize object list - this should not change during runtime
-        self._joints = [] 
+        self._joints = []
         self._parseJoints()
 
         # do initial update to get numValues
         self._update()
         self._numValues = len(self._values)
 
-                              
+
 class SpecificBodyPositionSensor(BodyPositionSensor):
     ''' This sensor takes a list of body names, and returns their positions. It must
         be given a custom name as well, for later identification.'''
@@ -307,7 +307,7 @@ class SpecificBodyPositionSensor(BodyPositionSensor):
         Sensor._connect(self, world)
 
         # initialize object list - this should not change during runtime
-        self._bodies = [] 
+        self._bodies = []
         self._parseBodies()
 
         # do initial update to get numValues

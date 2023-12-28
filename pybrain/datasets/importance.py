@@ -1,8 +1,10 @@
+from __future__ import print_function
+
 __author__ = 'Tom Schaul, tom@idsia.ch'
 
 from scipy import ones, dot
 
-from sequential import SequentialDataSet
+from pybrain.datasets.sequential import SequentialDataSet
 from pybrain.utilities import fListToString
 
 
@@ -12,18 +14,19 @@ from pybrain.utilities import fListToString
 
 class ImportanceDataSet(SequentialDataSet):
     """ Allows setting an importance value for each of the targets of a sample. """
-    
+
     def __init__(self, indim, targetdim):
         SequentialDataSet.__init__(self, indim, targetdim)
         self.addField('importance', targetdim)
         self.link.append('importance')
-        
+
     def addSample(self, inp, target, importance=None):
         """ adds a new sample consisting of input, target and importance.
-            @param input: the input of the sample
-            @param target: the target of the sample
-            @param importance: the importance of the sample. If left None, the
-            importance will be set to 1.0 
+
+            :arg inp: the input of the sample
+            :arg target: the target of the sample
+            :key importance: the importance of the sample. If left None, the
+                 importance will be set to 1.0
         """
         if importance == None:
             importance = ones(len(target))
@@ -39,9 +42,9 @@ class ImportanceDataSet(SequentialDataSet):
             totalError += e
             ponderation += sum(importance)
             if verbose:
-                print     'out:       ', fListToString(list(res))
-                print     'correct:   ', fListToString(target)
-                print     'importance:', fListToString(importance)
-                print     'error: % .8f' % e
+                print((    'out:       ', fListToString(list(res))))
+                print((    'correct:   ', fListToString(target)))
+                print((    'importance:', fListToString(importance)))
+                print((    'error: % .8f' % e))
         return totalError, ponderation
-    
+

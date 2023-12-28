@@ -1,6 +1,8 @@
+from __future__ import print_function
+
 ############################################################################
 # PyBrain Tutorial "Networks, Modules, Connections"
-# 
+#
 # Author: Tom Schaul, tom@idsia.ch
 ############################################################################
 
@@ -10,9 +12,9 @@ from pybrain.structure import FeedForwardNetwork, LinearLayer, SigmoidLayer, Ful
 from pybrain.tools.shortcuts import buildNetwork
 
 """ This tutorial will attempt to guide you for using one of PyBrain's most basic structural elements:
-Networks, and with them Modules and Connections. 
+Networks, and with them Modules and Connections.
 
-Let us start with a simple example, building a multi-layer-perceptron (MLP). 
+Let us start with a simple example, building a multi-layer-perceptron (MLP).
 
 First we make a new network object: """
 
@@ -48,76 +50,73 @@ n.sortModules()
 
 """ Let's see what we did. """
 
-print n
+print(n)
 
 """ One way of using the network is to call its 'activate()' method with an input to be transformed. """
 
-print n.activate([1, 2])
+print(n.activate([1, 2]))
 
 """ We can access the trainable parameters (weights) of a connection directly, or read
 all weights of the network at once. """
 
-print hidden2out.params
-print n.params
+print(hidden2out.params)
+print(n.params)
 
 """ The former are the last slice of the latter. """
 
-print n.params[-3:] == hidden2out.params
+print(n.params[-3:] == hidden2out.params)
 
-""" Ok, after having covered the basics, let's move on to some additional concepts. 
-First of all, we encourage you to name all modules, or connections you create, because that gives you 
-more readable printouts, and a very concise way of accessing them. 
+""" Ok, after having covered the basics, let's move on to some additional concepts.
+First of all, we encourage you to name all modules, or connections you create, because that gives you
+more readable printouts, and a very concise way of accessing them.
 
 We now build an equivalent network to the one before, but with a more concise syntax:
 """
-n2 = RecurrentNetwork(name = 'net2')
-n2.addInputModule(LinearLayer(2, name = 'in'))
-n2.addModule(SigmoidLayer(3, name = 'h'))
-n2.addOutputModule(LinearLayer(1, name = 'out'))
-n2.addConnection(FullConnection(n2['in'], n2['h'], name = 'c1'))
-n2.addConnection(FullConnection(n2['h'], n2['out'], name = 'c2'))
+n2 = RecurrentNetwork(name='net2')
+n2.addInputModule(LinearLayer(2, name='in'))
+n2.addModule(SigmoidLayer(3, name='h'))
+n2.addOutputModule(LinearLayer(1, name='out'))
+n2.addConnection(FullConnection(n2['in'], n2['h'], name='c1'))
+n2.addConnection(FullConnection(n2['h'], n2['out'], name='c2'))
 n2.sortModules()
 
 """ Printouts look more concise and readable: """
-print n2
+print(n2)
 
-""" There is an even quicker way to build networks though, as long as their structure is nothing 
+""" There is an even quicker way to build networks though, as long as their structure is nothing
 more fancy than a stack of fully connected layers: """
 
-n3 = buildNetwork(2,3,1, bias = False)
+n3 = buildNetwork(2, 3, 1, bias=False)
 
 """ Recurrent networks are working in the same way, except that the recurrent connections
-need to be explicitly declared upon construction. 
+need to be explicitly declared upon construction.
 
 We can modify our existing network 'net2' and add a recurrent connection on the hidden layer: """
 
-n2.addRecurrentConnection(FullConnection(n2['h'], n2['h'], name = 'rec'))
+n2.addRecurrentConnection(FullConnection(n2['h'], n2['h'], name='rec'))
 
 """ After every structural modification, if we want ot use the network, we call 'sortModules()' again"""
 
 n2.sortModules()
-print n2
+print(n2)
 
 """ As the network is now recurrent, successive activations produce different outputs: """
 
-print n2.activate([1,2]),
-print n2.activate([1,2]),
-print n2.activate([1,2])
+print(n2.activate([1, 2]), end=' ')
+print(n2.activate([1, 2]), end=' ')
+print(n2.activate([1, 2]))
 
-""" The 'reset()' method re-initializes the network, and with it sets the recurrent 
+""" The 'reset()' method re-initializes the network, and with it sets the recurrent
 activations to zero, so now we get the same results: """
 
 n2.reset()
-print n2.activate([1,2]),
-print n2.activate([1,2]),
-print n2.activate([1,2])
+print(n2.activate([1, 2]), end=' ')
+print(n2.activate([1, 2]), end=' ')
+print(n2.activate([1, 2]))
 
 """ This is already a good coverage of the basics, but if you're an advanced user
-and would like to know more about the possibilities of nesting networks within
-others, using weight-sharing, and more exotic types of networks, connections 
-and modules, then please read on.
-
- 
-To be continued... 
-... until then, you can read the comments in the source files of the pybrain/structure/ folder.
+you might want to find out about the possibilities of nesting networks within
+others, using weight-sharing, and more exotic types of networks, connections
+and modules... but that goes beyond the scope of this tutorial.
 """
+

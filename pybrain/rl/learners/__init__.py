@@ -1,8 +1,3 @@
-from learner import Learner
-from rwr import RWR
-from episodicrl import EpisodicRL
-from blackboxoptimizers.__init__ import *
-from policygradients.__init__ import *
-from finitedifference.__init__ import *
-from search.__init__ import *
-from discrete import Q, QLambda, SARSA
+from pybrain.rl.learners.directsearch.__init__ import *
+from pybrain.rl.learners.valuebased.__init__ import *
+from pybrain.rl.learners.modelbased.__init__ import *
